@@ -1,0 +1,419 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0d12">
+<title>Swipe Learn</title>
+<style>
+:root{--bg:#0b0d12;--panel:#161a23;--text:#f2f4f8;--muted:#9aa3b5;--accent:#7c9cff}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+#app{height:100dvh;max-width:520px;margin:0 auto;position:relative;overflow:hidden}
+#feed{height:100%;overflow-y:scroll;scroll-snap-type:y mandatory;scrollbar-width:none;overscroll-behavior:contain}
+#feed::-webkit-scrollbar{display:none}
+.card{height:100dvh;scroll-snap-align:start;scroll-snap-stop:always;position:relative;display:flex;flex-direction:column;justify-content:flex-end;overflow:hidden;background:linear-gradient(160deg,hsl(var(--h) 60% 28%),hsl(calc(var(--h) + 40) 55% 12%))}
+.card img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.9}
+.card .shade{position:absolute;inset:0;background:linear-gradient(to top,rgba(8,10,15,.97) 0%,rgba(8,10,15,.88) 38%,rgba(8,10,15,.15) 70%,rgba(8,10,15,.45) 100%)}
+.body{position:relative;padding:20px 76px 36px 20px;max-height:78%;overflow-y:auto;scrollbar-width:none}
+.body::-webkit-scrollbar{display:none}
+.chip{display:inline-block;font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;padding:5px 10px;border-radius:99px;background:rgba(255,255,255,.14);backdrop-filter:blur(6px);margin-bottom:10px}
+h2{font-size:26px;line-height:1.15;margin-bottom:10px}
+.txt{font-size:16px;line-height:1.5;color:#e3e7ef}
+.more{background:none;border:0;color:var(--accent);font-size:14px;font-weight:600;margin:8px 14px 0 0;cursor:pointer}
+.src{color:var(--muted);font-size:13px;text-decoration:none;display:inline-block;margin-top:8px}
+.rail{position:absolute;right:12px;bottom:46px;display:flex;flex-direction:column;gap:16px;z-index:3}
+.rail button{width:48px;height:48px;border-radius:50%;border:0;background:rgba(255,255,255,.14);backdrop-filter:blur(8px);color:#fff;font-size:21px;cursor:pointer}
+.rail button.on{background:#ff4d6d}
+.top{position:absolute;top:0;left:0;right:0;z-index:5;display:flex;justify-content:space-between;align-items:center;padding:calc(env(safe-area-inset-top) + 12px) 14px 12px;background:linear-gradient(to bottom,rgba(8,10,15,.75),transparent);pointer-events:none}
+.top>*{pointer-events:auto}
+.pill{border:0;background:rgba(255,255,255,.14);backdrop-filter:blur(8px);color:#fff;font-size:14px;font-weight:600;padding:8px 14px;border-radius:99px;cursor:pointer}
+.stat{font-size:13px;color:#d5daea}
+.loading{height:100dvh;scroll-snap-align:start;display:flex;align-items:center;justify-content:center;color:var(--muted)}
+.overlay{position:absolute;inset:0;z-index:10;background:rgba(11,13,18,.97);overflow-y:auto;padding:calc(env(safe-area-inset-top) + 22px) 20px 30px;display:none}
+.overlay.show{display:block}
+.overlay h1{font-size:24px;margin-bottom:6px}
+.overlay p.sub{color:var(--muted);font-size:14px;margin-bottom:18px;line-height:1.4}
+.chips{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:20px}
+.tchip{padding:10px 14px;border-radius:99px;border:1px solid #2b3244;background:var(--panel);color:var(--text);font-size:15px;cursor:pointer}
+.tchip.on{background:var(--accent);color:#0b0d12;border-color:var(--accent);font-weight:600}
+.row{display:flex;gap:8px;margin-bottom:22px}
+.row input{flex:1;padding:12px 14px;border-radius:12px;border:1px solid #2b3244;background:var(--panel);color:var(--text);font-size:15px}
+.btn{padding:12px 18px;border-radius:12px;border:0;background:var(--accent);color:#0b0d12;font-weight:700;font-size:15px;cursor:pointer}
+.btn.ghost{background:var(--panel);color:var(--text)}
+.saved-item{background:var(--panel);border-radius:14px;padding:14px;margin-bottom:12px}
+.saved-item h3{font-size:17px;margin-bottom:4px}
+.saved-item p{font-size:14px;color:var(--muted);line-height:1.4;margin-bottom:8px}
+.saved-item a{color:var(--accent);font-size:13px;margin-right:14px;text-decoration:none}
+.saved-item button{background:none;border:0;color:#ff7b93;font-size:13px;cursor:pointer}
+.grp{display:flex;gap:8px}
+.pill{padding:8px 12px}
+.top .stat{position:absolute;top:calc(env(safe-area-inset-top) + 54px);left:0;right:0;text-align:center;font-size:12px;pointer-events:none}
+.book-meta{font-size:13px;color:var(--muted);margin-bottom:6px}
+.book-tag{display:inline-block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--accent);margin-bottom:4px}
+.note{font-size:13px;color:var(--muted);line-height:1.45;margin:6px 0 18px}
+.foot-links{margin-top:18px;font-size:14px;line-height:1.8}
+.foot-links a{color:var(--accent);text-decoration:none;margin-right:14px}
+.hint{position:absolute;bottom:14px;left:0;right:0;text-align:center;font-size:12px;color:#c6cde0;z-index:4;pointer-events:none;opacity:.8}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="top">
+    <div class="grp">
+      <button class="pill" id="topicsBtn">☰ Topics</button>
+      <button class="pill" id="booksBtn">📚 Books</button>
+    </div>
+    <span class="stat" id="stat"></span>
+    <button class="pill" id="savedBtn">♥ Saved</button>
+  </div>
+  <div id="feed"></div>
+  <div class="hint" id="hint">Swipe up for the next card</div>
+
+  <div class="overlay" id="topicsOv">
+    <h1>What do you want to learn?</h1>
+    <p class="sub">Pick as many as you like. Your feed will mix only these. You can also add anything you're curious about.</p>
+    <div class="chips" id="topicChips"></div>
+    <div class="row">
+      <input id="customIn" placeholder="Add your own topic, e.g. volcanoes" maxlength="40">
+      <button class="btn ghost" id="customAdd">Add</button>
+    </div>
+    <button class="btn" id="topicsDone" style="width:100%">Start learning</button>
+  </div>
+
+  <div class="overlay" id="booksOv">
+    <h1>Free books</h1>
+    <p class="sub">Classic works that are out of copyright, so they're free to read online or download from Project Gutenberg.</p>
+    <div class="row">
+      <input id="bookSearch" placeholder="Search 70,000+ free books" maxlength="60">
+      <button class="btn ghost" id="bookSearchGo">Search</button>
+    </div>
+    <div class="chips" id="bookCats"></div>
+    <div id="bookList"></div>
+    <p class="note">Older science and astronomy books are great for the ideas and the history of thinking, but their facts can be out of date. Check a modern source for current figures.</p>
+    <div class="foot-links">
+      More free libraries:
+      <a href="https://www.gutenberg.org" target="_blank" rel="noopener">Project Gutenberg ↗</a>
+      <a href="https://standardebooks.org/ebooks" target="_blank" rel="noopener">Standard Ebooks ↗</a>
+      <a href="https://archive.org/details/texts" target="_blank" rel="noopener">Internet Archive ↗</a>
+    </div>
+    <button class="btn" id="booksClose" style="width:100%;margin-top:18px">Back to feed</button>
+  </div>
+
+  <div class="overlay" id="savedOv">
+    <h1>Saved</h1>
+    <p class="sub" id="savedSub"></p>
+    <div id="savedList"></div>
+    <button class="btn" id="savedClose" style="width:100%;margin-top:10px">Back to feed</button>
+  </div>
+</div>
+
+<script>
+const TOPICS = {
+  science:{label:'Science',emoji:'🔬',hue:200,terms:['physics law','chemistry compound','scientific discovery','biology process','scientific method','laboratory technique']},
+  space:{label:'Space',emoji:'🚀',hue:255,terms:['astronomy','exoplanet','black hole','space mission','galaxy','solar system moon']},
+  history:{label:'History',emoji:'🏛️',hue:28,terms:['ancient civilization','medieval history','world war history','historical empire','revolution history','archaeological discovery']},
+  nature:{label:'Nature & Animals',emoji:'🦉',hue:140,terms:['animal species behaviour','ecosystem','rainforest','marine biology','bird species','insect species']},
+  psychology:{label:'Psychology',emoji:'🧠',hue:310,terms:['cognitive bias','psychology experiment','memory psychology','behavioural psychology','developmental psychology','decision making']},
+  economics:{label:'Economics & Money',emoji:'💷',hue:95,terms:['economics concept','inflation','financial crisis history','behavioural economics','game theory','central bank']},
+  tech:{label:'Technology & AI',emoji:'🤖',hue:215,terms:['machine learning','computer science concept','internet history','programming language','cryptography','robotics']},
+  data:{label:'Data & Statistics',emoji:'📊',hue:175,terms:['statistics concept','probability paradox','data visualization','statistical test','data science','sampling bias']},
+  maths:{label:'Maths',emoji:'➗',hue:335,terms:['mathematical theorem','number theory','geometry','mathematical constant','famous mathematical problem','topology']},
+  health:{label:'Health & Body',emoji:'🫀',hue:355,terms:['human body organ','nutrition','sleep science','immune system','exercise physiology','medical discovery']},
+  philosophy:{label:'Philosophy',emoji:'🤔',hue:45,terms:['philosophical idea','ethics thought experiment','stoicism','philosopher','logic fallacy','epistemology']},
+  art:{label:'Art & Design',emoji:'🎨',hue:15,terms:['painting art movement','sculpture','graphic design','photography history','renaissance artist','modern art']},
+  geography:{label:'Geography',emoji:'🌍',hue:160,terms:['mountain range','river geography','island nation','desert','city geography','geological feature']},
+  food:{label:'Food & Cooking',emoji:'🍝',hue:20,terms:['cuisine dish','food science','fermentation','spice','traditional dish','cooking technique']},
+  sport:{label:'Sport',emoji:'⚽',hue:120,terms:['football history','golf course','olympic games','sports science','tennis','cricket']},
+  language:{label:'Languages',emoji:'🗣️',hue:270,terms:['linguistics','language family','writing system','etymology','italian language','icelandic language']},
+  music:{label:'Music',emoji:'🎵',hue:290,terms:['music theory','musical instrument','classical composer','music genre history','album music','jazz']},
+  architecture:{label:'Architecture',emoji:'🏗️',hue:35,terms:['famous building','bridge engineering','cathedral','skyscraper','architectural style','civil engineering']}
+};
+
+const LS = 'swipeLearn.v1';
+let S = load();
+function load(){
+  try{const s=JSON.parse(localStorage.getItem(LS));if(s&&s.topics)return s;}catch(e){}
+  return {topics:Object.keys(TOPICS),custom:[],saved:[],seen:{},streakDay:'',streak:0};
+}
+function save(){try{localStorage.setItem(LS,JSON.stringify(S));}catch(e){}}
+
+const $ = id => document.getElementById(id);
+const feed = $('feed');
+const cards = [];            // rendered card data
+const seenIds = new Set();
+let loading = false, current = 0, generation = 0;
+
+/* ---------- topic helpers ---------- */
+function activeTopics(){
+  const t = S.topics.filter(k=>TOPICS[k]);
+  const c = S.custom.filter(k=>S.topics.includes('c:'+k)).map(k=>'c:'+k);
+  return [...t,...c];
+}
+function topicMeta(key){
+  if(key.startsWith('c:')){return {label:key.slice(2),emoji:'✨',hue:(key.length*37)%360,terms:[key.slice(2)],custom:true};}
+  return TOPICS[key];
+}
+
+/* ---------- fetching ---------- */
+const API='https://en.wikipedia.org/w/api.php';
+function cleanText(t){
+  return t.replace(/\s*\([^)]*[;ˈˌ\u00C0-\uFFFF][^)]*\)/g,'').replace(/\s+/g,' ').trim();
+}
+function sentences(t){return t.split(/(?<=[.!?])\s+(?=[A-Z0-9"])/);}
+
+async function fetchTopic(key){
+  const m = topicMeta(key);
+  const term = m.terms[Math.floor(Math.random()*m.terms.length)];
+  const offset = Math.floor(Math.random()*(m.custom?40:70));
+  const p = new URLSearchParams({
+    action:'query',format:'json',origin:'*',generator:'search',gsrsearch:term,gsrnamespace:'0',
+    gsrlimit:'12',gsroffset:String(offset),prop:'extracts|pageimages|info',exintro:'1',explaintext:'1',
+    exlimit:'max',piprop:'thumbnail',pithumbsize:'900',inprop:'url'
+  });
+  const r = await fetch(API+'?'+p);
+  if(!r.ok) throw new Error('fetch failed');
+  const j = await r.json();
+  const pages = j.query ? Object.values(j.query.pages) : [];
+  return pages.map(pg=>{
+    const ex = cleanText(pg.extract||'');
+    return {id:String(pg.pageid),title:pg.title,text:ex,img:pg.thumbnail?pg.thumbnail.source:null,url:pg.fullurl,topic:key};
+  }).filter(c=>c.text.length>140 && !/may refer to|may also refer to/i.test(c.text) && !seenIds.has(c.id));
+}
+
+async function loadMore(){
+  if(loading) return;
+  const act = activeTopics();
+  if(!act.length) return;
+  loading = true;
+  const gen = generation;
+  try{
+    // pick up to 3 topics at once for variety
+    const picks = [...act].sort(()=>Math.random()-.5).slice(0,3);
+    const results = await Promise.allSettled(picks.map(fetchTopic));
+    if(gen !== generation) return;
+    let fresh = [];
+    results.forEach(r=>{ if(r.status==='fulfilled'){ fresh.push(...r.value.sort(()=>Math.random()-.5).slice(0,4)); }});
+    fresh = fresh.sort(()=>Math.random()-.5);
+    if(!fresh.length){ showLoader(cards.length?'Couldn’t load more. Check your connection and scroll again.':'Nothing found. Try other topics.'); return; }
+    removeLoader();
+    fresh.forEach(c=>{ if(seenIds.has(c.id)) return; seenIds.add(c.id); cards.push(c); feed.appendChild(renderCard(c,cards.length-1)); });
+    appendLoader();
+  }catch(e){
+    if(gen===generation) showLoader('Couldn’t load more. Check your connection and scroll again.');
+  }finally{ if(gen===generation) loading = false; }
+}
+
+/* ---------- rendering ---------- */
+let loaderEl=null;
+function appendLoader(){ removeLoader(); loaderEl=document.createElement('div'); loaderEl.className='loading'; loaderEl.textContent='Loading more…'; feed.appendChild(loaderEl); }
+function removeLoader(){ if(loaderEl){loaderEl.remove();loaderEl=null;} }
+function showLoader(msg){ if(!loaderEl) appendLoader(); loaderEl.textContent=msg; }
+
+const io = new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting && e.intersectionRatio>0.6){
+      const i = Number(e.target.dataset.i);
+      current = i;
+      markSeen(cards[i]);
+      if(i >= cards.length-4) loadMore();
+      if(i>0) $('hint').style.display='none';
+    }
+  });
+},{root:feed,threshold:[0.6]});
+
+function isSaved(id){return S.saved.some(c=>c.id===id);}
+
+function renderCard(c,i){
+  const m = topicMeta(c.topic);
+  const el = document.createElement('section');
+  el.className='card'; el.dataset.i=i; el.style.setProperty('--h',m.hue);
+  if(c.img){ const im=document.createElement('img'); im.src=c.img; im.alt=''; im.loading=i<2?'eager':'lazy'; im.referrerPolicy='no-referrer'; im.onerror=()=>im.remove(); el.appendChild(im); }
+  const shade=document.createElement('div'); shade.className='shade'; el.appendChild(shade);
+
+  const body=document.createElement('div'); body.className='body';
+  const chip=document.createElement('span'); chip.className='chip'; chip.textContent=m.emoji+' '+m.label;
+  const h=document.createElement('h2'); h.textContent=c.title;
+  const s=sentences(c.text);
+  const short=s.slice(0,3).join(' ');
+  const long = c.text.length>1400 ? s.slice(0,10).join(' ') : c.text;
+  const p=document.createElement('p'); p.className='txt'; p.textContent=short;
+  body.append(chip,h,p);
+  if(long.length>short.length+20){
+    const more=document.createElement('button'); more.className='more'; more.textContent='Read more';
+    let open=false;
+    more.onclick=()=>{open=!open;p.textContent=open?long:short;more.textContent=open?'Show less':'Read more';};
+    body.appendChild(more);
+  }
+  const a=document.createElement('a'); a.className='src'; a.href=c.url; a.target='_blank'; a.rel='noopener'; a.textContent='Full article on Wikipedia ↗';
+  body.appendChild(a);
+  el.appendChild(body);
+
+  const rail=document.createElement('div'); rail.className='rail';
+  const like=document.createElement('button'); like.textContent='♥'; like.title='Save'; if(isSaved(c.id)) like.classList.add('on');
+  like.onclick=()=>{
+    if(isSaved(c.id)){S.saved=S.saved.filter(x=>x.id!==c.id);like.classList.remove('on');}
+    else{S.saved.unshift({id:c.id,title:c.title,text:short,url:c.url,topic:c.topic});like.classList.add('on');}
+    save(); updateStat();
+  };
+  const share=document.createElement('button'); share.textContent='↗'; share.title='Share';
+  share.onclick=async()=>{
+    try{ if(navigator.share) await navigator.share({title:c.title,text:short,url:c.url}); else {await navigator.clipboard.writeText(c.url); share.textContent='✓'; setTimeout(()=>share.textContent='↗',1200);} }catch(e){}
+  };
+  rail.append(like,share); el.appendChild(rail);
+
+  io.observe(el);
+  return el;
+}
+
+/* ---------- stats ---------- */
+function today(){return new Date().toISOString().slice(0,10);}
+function markSeen(c){
+  if(!c) return;
+  const d=today();
+  S.seen[d]=S.seen[d]||[];
+  if(!S.seen[d].includes(c.id)) S.seen[d].push(c.id);
+  if(S.streakDay!==d){
+    const y=new Date(Date.now()-864e5).toISOString().slice(0,10);
+    S.streak = S.streakDay===y ? S.streak+1 : 1;
+    S.streakDay=d;
+  }
+  // keep storage small
+  const keys=Object.keys(S.seen).sort(); while(keys.length>30) delete S.seen[keys.shift()];
+  save(); updateStat();
+}
+function updateStat(){
+  const n=(S.seen[today()]||[]).length;
+  $('stat').textContent = `${n} today${S.streak>1?` · 🔥 ${S.streak}d`:''}`;
+  $('savedBtn').textContent = `♥ Saved${S.saved.length?' ('+S.saved.length+')':''}`;
+}
+
+/* ---------- topic picker ---------- */
+function buildChips(){
+  const wrap=$('topicChips'); wrap.innerHTML='';
+  const mk=(key,label)=>{
+    const b=document.createElement('button'); b.className='tchip'+(S.topics.includes(key)?' on':''); b.textContent=label;
+    b.onclick=()=>{
+      if(S.topics.includes(key)) S.topics=S.topics.filter(k=>k!==key); else S.topics.push(key);
+      b.classList.toggle('on'); save();
+    };
+    wrap.appendChild(b);
+  };
+  Object.entries(TOPICS).forEach(([k,v])=>mk(k,v.emoji+' '+v.label));
+  S.custom.forEach(c=>mk('c:'+c,'✨ '+c));
+}
+function addCustom(){
+  const v=$('customIn').value.trim().slice(0,40);
+  if(!v) return;
+  if(!S.custom.some(c=>c.toLowerCase()===v.toLowerCase())) S.custom.push(v);
+  if(!S.topics.includes('c:'+v)) S.topics.push('c:'+v);
+  $('customIn').value=''; save(); buildChips();
+}
+$('customAdd').onclick=addCustom;
+$('customIn').addEventListener('keydown',e=>{if(e.key==='Enter')addCustom();});
+$('topicsBtn').onclick=()=>{buildChips();$('topicsOv').classList.add('show');};
+$('topicsDone').onclick=()=>{
+  if(!activeTopics().length){ alert('Pick at least one topic.'); return; }
+  $('topicsOv').classList.remove('show');
+  resetFeed();
+};
+
+/* ---------- saved view ---------- */
+function showSaved(){
+  const list=$('savedList'); list.innerHTML='';
+  $('savedSub').textContent = S.saved.length ? 'Tap a title to read the full article.' : 'Nothing saved yet. Tap ♥ on a card to keep it here.';
+  S.saved.forEach(c=>{
+    const d=document.createElement('div'); d.className='saved-item';
+    const h=document.createElement('h3'); h.textContent=c.title;
+    const p=document.createElement('p'); p.textContent=c.text;
+    const a=document.createElement('a'); a.href=c.url; a.target='_blank'; a.rel='noopener'; a.textContent='Read on Wikipedia ↗';
+    const r=document.createElement('button'); r.textContent='Remove';
+    r.onclick=()=>{S.saved=S.saved.filter(x=>x.id!==c.id);save();updateStat();showSaved();document.querySelectorAll('.card').forEach(el=>{const cc=cards[el.dataset.i]; if(cc&&cc.id===c.id){const b=el.querySelector('.rail button'); if(b) b.classList.remove('on');}});};
+    d.append(h,p,a,r); list.appendChild(d);
+  });
+  $('savedOv').classList.add('show');
+}
+$('savedBtn').onclick=showSaved;
+$('savedClose').onclick=()=>$('savedOv').classList.remove('show');
+
+/* ---------- free books ---------- */
+const BOOKS=[
+  {c:'Science',t:'On the Origin of Species',a:'Charles Darwin',y:'1859',d:'The book that set out evolution by natural selection, argued from pigeon breeding to island wildlife.'},
+  {c:'Science',t:'The Voyage of the Beagle',a:'Charles Darwin',y:'1839',d:'His journal from five years at sea, where many of the ideas behind the Origin took shape.'},
+  {c:'Science',t:'The Descent of Man',a:'Charles Darwin',y:'1871',d:'Darwin applies evolution to humans and develops his ideas on sexual selection.'},
+  {c:'Science',t:'Relativity: The Special and General Theory',a:'Albert Einstein',y:'1916',d:'Einstein’s own plain-language explanation of relativity for non-specialists.',q:'Einstein relativity'},
+  {c:'Science',t:'The Chemical History of a Candle',a:'Michael Faraday',y:'1861',d:'Christmas lectures that use a burning candle to teach chemistry and physics.'},
+  {c:'Space',t:'Astronomy for Everybody',a:'Simon Newcomb',y:'1902',d:'A leading astronomer’s tour of the solar system, stars and nebulae for general readers.'},
+  {c:'Space',t:'The Story of the Heavens',a:'Robert Ball',y:'1885',d:'A popular Victorian guide to the sun, planets, comets and the universe beyond.'},
+  {c:'Space',t:'A Popular History of Astronomy During the Nineteenth Century',a:'Agnes Clerke',y:'1885',d:'How astronomers moved from charting positions to studying what stars are made of.',q:'Clerke astronomy'},
+  {c:'Space',t:'From the Earth to the Moon',a:'Jules Verne',y:'1865',d:'Classic science fiction: a gun club decides to fire a crewed shell at the Moon.'},
+  {c:'History',t:'The Histories',a:'Herodotus',y:'c. 430 BC',d:'Often called the first work of history, centred on the Greek–Persian wars.'},
+  {c:'History',t:'History of the Peloponnesian War',a:'Thucydides',y:'c. 400 BC',d:'Athens against Sparta, told with a sharp eye for power, fear and politics.'},
+  {c:'History',t:'The Decline and Fall of the Roman Empire',a:'Edward Gibbon',y:'1776–89',d:'The enormous, famously elegant account of how Rome fell. Dip into a chapter at a time.'},
+  {c:'History',t:'Parallel Lives',a:'Plutarch',y:'c. 100 AD',d:'Paired biographies of Greek and Roman figures, and a source for much of what we know about them.',q:'Plutarch lives'},
+  {c:'Maths',t:'Elements',a:'Euclid',y:'c. 300 BC',d:'The geometry textbook that shaped mathematical proof for over two thousand years.',q:'Euclid elements'},
+  {c:'Maths',t:'Flatland',a:'Edwin Abbott',y:'1884',d:'A short, witty story about a two-dimensional world that makes extra dimensions click.'},
+  {c:'Philosophy',t:'Meditations',a:'Marcus Aurelius',y:'c. 170 AD',d:'A Roman emperor’s private notes on Stoic practice, duty and keeping calm.'},
+  {c:'Philosophy',t:'The Republic',a:'Plato',y:'c. 375 BC',d:'A dialogue on justice and the ideal society, and one of the foundations of Western philosophy.'},
+  {c:'Philosophy',t:'The Prince',a:'Niccolò Machiavelli',y:'1532',d:'A short and notorious handbook on gaining and holding political power.',q:'Machiavelli prince'},
+  {c:'Philosophy',t:'The Art of War',a:'Sun Tzu',y:'c. 500 BC',d:'Concise lessons on strategy, planning and winning without fighting.',q:'Sun Tzu art of war'},
+  {c:'Philosophy',t:'The Principles of Psychology',a:'William James',y:'1890',d:'The founding text of American psychology, with famous chapters on habit and attention.'},
+  {c:'Economics',t:'The Wealth of Nations',a:'Adam Smith',y:'1776',d:'The foundational work of modern economics, covering markets, trade and the division of labour.'},
+  {c:'Economics',t:'The Communist Manifesto',a:'Karl Marx & Friedrich Engels',y:'1848',d:'An influential and controversial political pamphlet on class and capitalism.',q:'Communist Manifesto'},
+  {c:'Nature',t:'The Life of the Spider',a:'Jean-Henri Fabre',y:'1912',d:'A naturalist’s close observations of spiders, written with real warmth.',q:'Fabre spider'},
+  {c:'Nature',t:'The Formation of Vegetable Mould Through the Action of Worms',a:'Charles Darwin',y:'1881',d:'Darwin’s last book, a surprisingly gripping study of earthworms and soil.'},
+  {c:'Nature',t:'Walden',a:'Henry David Thoreau',y:'1854',d:'Two years living simply by a pond, part nature writing and part philosophy.'}
+];
+const GUT='https://www.gutenberg.org/ebooks/search/?query=';
+let bookCat='All';
+function bookUrl(b){return GUT+encodeURIComponent(b.q?b.q:b.t+' '+b.a.split(' ').pop());}
+function buildBooks(){
+  const cats=['All',...new Set(BOOKS.map(b=>b.c))];
+  const wrap=$('bookCats'); wrap.innerHTML='';
+  cats.forEach(c=>{
+    const b=document.createElement('button'); b.className='tchip'+(c===bookCat?' on':''); b.textContent=c;
+    b.onclick=()=>{bookCat=c;buildBooks();}; wrap.appendChild(b);
+  });
+  const list=$('bookList'); list.innerHTML='';
+  BOOKS.filter(b=>bookCat==='All'||b.c===bookCat).forEach(b=>{
+    const d=document.createElement('div'); d.className='saved-item';
+    const tag=document.createElement('div'); tag.className='book-tag'; tag.textContent=b.c;
+    const h=document.createElement('h3'); h.textContent=b.t;
+    const m=document.createElement('div'); m.className='book-meta'; m.textContent=b.a+' · '+b.y;
+    const p=document.createElement('p'); p.textContent=b.d;
+    const a=document.createElement('a'); a.href=bookUrl(b); a.target='_blank'; a.rel='noopener'; a.textContent='Find free on Gutenberg ↗';
+    d.append(tag,h,m,p,a); list.appendChild(d);
+  });
+}
+function bookSearch(){
+  const v=$('bookSearch').value.trim(); if(!v) return;
+  window.open(GUT+encodeURIComponent(v),'_blank','noopener');
+}
+$('booksBtn').onclick=()=>{buildBooks();$('booksOv').classList.add('show');};
+$('booksClose').onclick=()=>$('booksOv').classList.remove('show');
+$('bookSearchGo').onclick=bookSearch;
+$('bookSearch').addEventListener('keydown',e=>{if(e.key==='Enter')bookSearch();});
+
+/* ---------- feed control ---------- */
+function resetFeed(){
+  generation++; loading=false;
+  cards.length=0; seenIds.clear();
+  feed.innerHTML=''; loaderEl=null;
+  appendLoader();
+  feed.scrollTop=0;
+  loadMore();
+}
+
+document.addEventListener('keydown',e=>{
+  if($('topicsOv').classList.contains('show')||$('savedOv').classList.contains('show')||$('booksOv').classList.contains('show')) return;
+  if(e.key==='ArrowDown'||e.key==='j'){e.preventDefault();feed.scrollBy({top:feed.clientHeight,behavior:'smooth'});}
+  if(e.key==='ArrowUp'||e.key==='k'){e.preventDefault();feed.scrollBy({top:-feed.clientHeight,behavior:'smooth'});}
+});
+
+/* ---------- init ---------- */
+updateStat();
+buildChips();
+resetFeed();
+</script>
+</body>
+</html>
