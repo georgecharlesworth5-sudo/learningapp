@@ -25,12 +25,12 @@ h2{font-size:26px;line-height:1.15;margin-bottom:10px}
 .rail{position:absolute;right:12px;bottom:46px;display:flex;flex-direction:column;gap:16px;z-index:3}
 .rail button{width:48px;height:48px;border-radius:50%;border:0;background:rgba(255,255,255,.14);backdrop-filter:blur(8px);color:#fff;font-size:21px;cursor:pointer}
 .rail button.on{background:#ff4d6d}
-.top{position:absolute;top:0;left:0;right:0;z-index:5;display:flex;justify-content:space-between;align-items:center;padding:calc(env(safe-area-inset-top) + 12px) 14px 12px;background:linear-gradient(to bottom,rgba(8,10,15,.75),transparent);pointer-events:none}
+.top{position:absolute;top:0;left:0;right:0;z-index:20;display:flex;justify-content:space-between;align-items:center;padding:calc(env(safe-area-inset-top) + 12px) 14px 12px;background:linear-gradient(to bottom,rgba(8,10,15,.75),transparent);pointer-events:none}
 .top>*{pointer-events:auto}
 .pill{border:0;background:rgba(255,255,255,.14);backdrop-filter:blur(8px);color:#fff;font-size:14px;font-weight:600;padding:8px 14px;border-radius:99px;cursor:pointer}
 .stat{font-size:13px;color:#d5daea}
 .loading{height:100dvh;scroll-snap-align:start;display:flex;align-items:center;justify-content:center;color:var(--muted)}
-.overlay{position:absolute;inset:0;z-index:10;background:rgba(11,13,18,.97);overflow-y:auto;padding:calc(env(safe-area-inset-top) + 22px) 20px 30px;display:none}
+.overlay{position:absolute;inset:0;z-index:10;background:rgba(11,13,18,.97);overflow-y:auto;padding:calc(env(safe-area-inset-top) + 72px) 20px 30px;display:none}
 .overlay.show{display:block}
 .overlay h1{font-size:24px;margin-bottom:6px}
 .overlay p.sub{color:var(--muted);font-size:14px;margin-bottom:18px;line-height:1.4}
@@ -54,6 +54,25 @@ h2{font-size:26px;line-height:1.15;margin-bottom:10px}
 .note{font-size:13px;color:var(--muted);line-height:1.45;margin:6px 0 18px}
 .foot-links{margin-top:18px;font-size:14px;line-height:1.8}
 .foot-links a{color:var(--accent);text-decoration:none;margin-right:14px}
+.pill.active{background:var(--accent);color:#0b0d12}
+.daily{background:linear-gradient(160deg,#1c2440,#161a23);border:1px solid #2b3244;border-radius:18px;padding:18px;margin-bottom:24px}
+.lbl{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);margin-bottom:6px}
+.bk h3{font-size:22px;line-height:1.2;margin-bottom:4px}
+.bk .ov{font-size:15px;line-height:1.5;color:#e3e7ef;margin:10px 0 4px}
+.bk h4{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:14px 0 6px}
+.bk ul{padding-left:20px;font-size:15px;line-height:1.45;color:#dfe4ee}
+.bk li{margin-bottom:5px}
+.bk .pros h4{color:#6fdc9a}
+.bk .cons h4{color:#ff8a9b}
+.bk a.read{display:inline-block;margin-top:14px;color:#0b0d12;background:var(--accent);padding:10px 16px;border-radius:12px;font-weight:700;text-decoration:none;font-size:14px}
+.sec{font-size:19px;margin:6px 0 10px}
+.bl{background:var(--panel);border-radius:14px;margin-bottom:10px;overflow:hidden}
+.bl>button{width:100%;text-align:left;background:none;border:0;color:var(--text);padding:14px;font-size:16px;font-weight:600;cursor:pointer;display:flex;justify-content:space-between;gap:10px;align-items:center}
+.bl .sm{display:block;font-size:13px;color:var(--muted);font-weight:400;margin-top:2px}
+.bl .det{display:none;padding:0 14px 16px}
+.bl.open .det{display:block}
+.bl .chev{color:var(--muted);transition:transform .15s}
+.bl.open .chev{transform:rotate(90deg)}
 .hint{position:absolute;bottom:14px;left:0;right:0;text-align:center;font-size:12px;color:#c6cde0;z-index:4;pointer-events:none;opacity:.8}
 </style>
 </head>
@@ -83,13 +102,14 @@ h2{font-size:26px;line-height:1.15;margin-bottom:10px}
 
   <div class="overlay" id="booksOv">
     <h1>Free books</h1>
-    <p class="sub">Classic works that are out of copyright, so they're free to read online or download from Project Gutenberg.</p>
-    <div class="row">
+    <p class="sub">20 key classics that are out of copyright, with a new one featured each day. Read them free online through Project Gutenberg.</p>
+    <div id="bookDaily"></div>
+    <h2 class="sec">All 20 books</h2>
+    <div id="bookList"></div>
+    <div class="row" style="margin-top:18px">
       <input id="bookSearch" placeholder="Search 70,000+ free books" maxlength="60">
       <button class="btn ghost" id="bookSearchGo">Search</button>
     </div>
-    <div class="chips" id="bookCats"></div>
-    <div id="bookList"></div>
     <p class="note">Older science and astronomy books are great for the ideas and the history of thinking, but their facts can be out of date. Check a modern source for current figures.</p>
     <div class="foot-links">
       More free libraries:
@@ -295,7 +315,7 @@ function buildChips(){
     const b=document.createElement('button'); b.className='tchip'+(S.topics.includes(key)?' on':''); b.textContent=label;
     b.onclick=()=>{
       if(S.topics.includes(key)) S.topics=S.topics.filter(k=>k!==key); else S.topics.push(key);
-      b.classList.toggle('on'); save();
+      b.classList.toggle('on'); topicsDirty=true; save();
     };
     wrap.appendChild(b);
   };
@@ -307,15 +327,37 @@ function addCustom(){
   if(!v) return;
   if(!S.custom.some(c=>c.toLowerCase()===v.toLowerCase())) S.custom.push(v);
   if(!S.topics.includes('c:'+v)) S.topics.push('c:'+v);
-  $('customIn').value=''; save(); buildChips();
+  $('customIn').value=''; topicsDirty=true; save(); buildChips();
 }
 $('customAdd').onclick=addCustom;
 $('customIn').addEventListener('keydown',e=>{if(e.key==='Enter')addCustom();});
-$('topicsBtn').onclick=()=>{buildChips();$('topicsOv').classList.add('show');};
+const OVS={topicsBtn:'topicsOv',booksBtn:'booksOv',savedBtn:'savedOv'};
+let topicsDirty=false;
+function syncPills(){Object.entries(OVS).forEach(([b,o])=>$(b).classList.toggle('active',$(o).classList.contains('show')));}
+function closeOverlays(except){
+  Object.values(OVS).forEach(id=>{
+    const el=$(id);
+    if(id!==except && el.classList.contains('show')){
+      el.classList.remove('show');
+      if(id==='topicsOv' && topicsDirty && activeTopics().length){ topicsDirty=false; resetFeed(); }
+    }
+  });
+  syncPills();
+}
+function toggleOverlay(id,onOpen){
+  const el=$(id);
+  if(el.classList.contains('show')){ closeOverlays(); return; }
+  closeOverlays(id);
+  if(onOpen) onOpen();
+  el.classList.add('show'); el.scrollTop=0;
+  syncPills();
+}
+$('topicsBtn').onclick=()=>toggleOverlay('topicsOv',buildChips);
 $('topicsDone').onclick=()=>{
   if(!activeTopics().length){ alert('Pick at least one topic.'); return; }
-  $('topicsOv').classList.remove('show');
-  resetFeed();
+  const changed=topicsDirty; topicsDirty=false;
+  closeOverlays();
+  if(changed) resetFeed();
 };
 
 /* ---------- saved view ---------- */
@@ -331,66 +373,151 @@ function showSaved(){
     r.onclick=()=>{S.saved=S.saved.filter(x=>x.id!==c.id);save();updateStat();showSaved();document.querySelectorAll('.card').forEach(el=>{const cc=cards[el.dataset.i]; if(cc&&cc.id===c.id){const b=el.querySelector('.rail button'); if(b) b.classList.remove('on');}});};
     d.append(h,p,a,r); list.appendChild(d);
   });
-  $('savedOv').classList.add('show');
 }
-$('savedBtn').onclick=showSaved;
-$('savedClose').onclick=()=>$('savedOv').classList.remove('show');
+$('savedBtn').onclick=()=>toggleOverlay('savedOv',showSaved);
+$('savedClose').onclick=()=>closeOverlays();
 
 /* ---------- free books ---------- */
 const BOOKS=[
-  {c:'Science',t:'On the Origin of Species',a:'Charles Darwin',y:'1859',d:'The book that set out evolution by natural selection, argued from pigeon breeding to island wildlife.'},
-  {c:'Science',t:'The Voyage of the Beagle',a:'Charles Darwin',y:'1839',d:'His journal from five years at sea, where many of the ideas behind the Origin took shape.'},
-  {c:'Science',t:'The Descent of Man',a:'Charles Darwin',y:'1871',d:'Darwin applies evolution to humans and develops his ideas on sexual selection.'},
-  {c:'Science',t:'Relativity: The Special and General Theory',a:'Albert Einstein',y:'1916',d:'Einstein’s own plain-language explanation of relativity for non-specialists.',q:'Einstein relativity'},
-  {c:'Science',t:'The Chemical History of a Candle',a:'Michael Faraday',y:'1861',d:'Christmas lectures that use a burning candle to teach chemistry and physics.'},
-  {c:'Space',t:'Astronomy for Everybody',a:'Simon Newcomb',y:'1902',d:'A leading astronomer’s tour of the solar system, stars and nebulae for general readers.'},
-  {c:'Space',t:'The Story of the Heavens',a:'Robert Ball',y:'1885',d:'A popular Victorian guide to the sun, planets, comets and the universe beyond.'},
-  {c:'Space',t:'A Popular History of Astronomy During the Nineteenth Century',a:'Agnes Clerke',y:'1885',d:'How astronomers moved from charting positions to studying what stars are made of.',q:'Clerke astronomy'},
-  {c:'Space',t:'From the Earth to the Moon',a:'Jules Verne',y:'1865',d:'Classic science fiction: a gun club decides to fire a crewed shell at the Moon.'},
-  {c:'History',t:'The Histories',a:'Herodotus',y:'c. 430 BC',d:'Often called the first work of history, centred on the Greek–Persian wars.'},
-  {c:'History',t:'History of the Peloponnesian War',a:'Thucydides',y:'c. 400 BC',d:'Athens against Sparta, told with a sharp eye for power, fear and politics.'},
-  {c:'History',t:'The Decline and Fall of the Roman Empire',a:'Edward Gibbon',y:'1776–89',d:'The enormous, famously elegant account of how Rome fell. Dip into a chapter at a time.'},
-  {c:'History',t:'Parallel Lives',a:'Plutarch',y:'c. 100 AD',d:'Paired biographies of Greek and Roman figures, and a source for much of what we know about them.',q:'Plutarch lives'},
-  {c:'Maths',t:'Elements',a:'Euclid',y:'c. 300 BC',d:'The geometry textbook that shaped mathematical proof for over two thousand years.',q:'Euclid elements'},
-  {c:'Maths',t:'Flatland',a:'Edwin Abbott',y:'1884',d:'A short, witty story about a two-dimensional world that makes extra dimensions click.'},
-  {c:'Philosophy',t:'Meditations',a:'Marcus Aurelius',y:'c. 170 AD',d:'A Roman emperor’s private notes on Stoic practice, duty and keeping calm.'},
-  {c:'Philosophy',t:'The Republic',a:'Plato',y:'c. 375 BC',d:'A dialogue on justice and the ideal society, and one of the foundations of Western philosophy.'},
-  {c:'Philosophy',t:'The Prince',a:'Niccolò Machiavelli',y:'1532',d:'A short and notorious handbook on gaining and holding political power.',q:'Machiavelli prince'},
-  {c:'Philosophy',t:'The Art of War',a:'Sun Tzu',y:'c. 500 BC',d:'Concise lessons on strategy, planning and winning without fighting.',q:'Sun Tzu art of war'},
-  {c:'Philosophy',t:'The Principles of Psychology',a:'William James',y:'1890',d:'The founding text of American psychology, with famous chapters on habit and attention.'},
-  {c:'Economics',t:'The Wealth of Nations',a:'Adam Smith',y:'1776',d:'The foundational work of modern economics, covering markets, trade and the division of labour.'},
-  {c:'Economics',t:'The Communist Manifesto',a:'Karl Marx & Friedrich Engels',y:'1848',d:'An influential and controversial political pamphlet on class and capitalism.',q:'Communist Manifesto'},
-  {c:'Nature',t:'The Life of the Spider',a:'Jean-Henri Fabre',y:'1912',d:'A naturalist’s close observations of spiders, written with real warmth.',q:'Fabre spider'},
-  {c:'Nature',t:'The Formation of Vegetable Mould Through the Action of Worms',a:'Charles Darwin',y:'1881',d:'Darwin’s last book, a surprisingly gripping study of earthworms and soil.'},
-  {c:'Nature',t:'Walden',a:'Henry David Thoreau',y:'1854',d:'Two years living simply by a pond, part nature writing and part philosophy.'}
+{c:'Science',t:'On the Origin of Species',a:'Charles Darwin',y:'1859',
+ ov:'Darwin sets out his theory that species change over time through natural selection, building the case from animal breeding, geography, fossils and anatomy.',
+ key:['Individuals vary, and some of that variation is inherited.','More offspring are born than can survive, so there is a struggle for resources.','Traits that help survival and reproduction become more common: natural selection.','All life shares common ancestry stretching over huge spans of time.'],
+ pros:['Patient, evidence-heavy argument that still anchors modern biology.','Far more readable than most scientific landmarks.'],
+ cons:['Long and dense, in Victorian prose.','Written before genetics, so the mechanism of inheritance is missing.']},
+{c:'Philosophy',t:'The Republic',a:'Plato',y:'c. 375 BC',
+ ov:'A dialogue led by Socrates that asks what justice is, and imagines what a perfectly just city and a just person would look like.',
+ key:['The city and the soul each have three parts: reason, spirit and appetite.','Rule by philosopher-kings who love truth rather than power.','The Allegory of the Cave: most of us mistake shadows for reality.','The Theory of Forms: ideal, unchanging versions of things like beauty and justice.'],
+ pros:['Introduces questions that are still debated today.','The dialogue form and the Cave image make it memorable.'],
+ cons:['The ideal city is authoritarian, with censorship and fixed classes.','The Theory of Forms is contested, and translations vary a lot.']},
+{c:'History',t:'The Decline and Fall of the Roman Empire',a:'Edward Gibbon',y:'1776–89',
+ ov:'A vast narrative of Rome from the second century to the fall of Constantinople in 1453, and a pioneering work of modern history writing.',
+ key:['Offers many causes for decline: internal decay, political instability, military pressures and invasions.','Argues that the rise of Christianity changed Roman civic culture, a point still debated.','Pioneered detailed footnotes and critical use of sources.'],
+ pros:['Witty, magnificent prose that shaped how history is written.','Covers more than a thousand years in one sweep.'],
+ cons:['Six volumes, so best taken a chapter at a time.','Scholarship is dated, and his view of Byzantium and Christianity is biased.']},
+{c:'Maths',t:'Elements',a:'Euclid',y:'c. 300 BC',q:'Euclid elements',
+ ov:'The geometry textbook that built mathematics from a few definitions and assumptions, proving each result step by step.',
+ key:['Starts from definitions, postulates and common notions, then proves theorems in sequence.','Includes number theory, such as there being infinitely many primes.','The parallel postulate later inspired non-Euclidean geometry.'],
+ pros:['A model of logical proof that shaped science and education.','Shows how knowledge can be built on firm foundations.'],
+ cons:['Hard to read cover to cover as a book.','By modern standards some proofs have gaps, and the geometric style feels awkward today.']},
+{c:'Economics',t:'The Wealth of Nations',a:'Adam Smith',y:'1776',
+ ov:'Smith asks what makes nations prosper, arguing that productivity and trade matter more than hoarding gold.',
+ key:['Division of labour raises output, as in his famous pin factory.','Markets coordinate people’s self-interest, the “invisible hand” idea.','Criticises mercantilism and heavy trade restrictions.','Sees a role for government in defence, justice and public works.'],
+ pros:['The foundation of modern economics, full of concrete examples.','More nuanced than the slogans made from it.'],
+ cons:['Very long and digressive.','Eighteenth-century examples, and often misquoted as pure free-market doctrine.']},
+{c:'Space',t:'Astronomy for Everybody',a:'Simon Newcomb',y:'1902',
+ ov:'A leading astronomer of his day gives general readers a tour of the solar system, the stars and how distances in space are measured.',
+ key:['Explains how astronomers measure distances and motions.','Tours the Sun, planets, comets and stars as understood around 1900.','Shows how a scientist explained the cosmos before modern cosmology.'],
+ pros:['Clear, friendly writing from a real expert.','A snapshot of what astronomy knew a century ago.'],
+ cons:['Badly out of date: no Big Bang, no exoplanets, no modern galaxy picture.','Use it for history and method, not current facts.']},
+{c:'Philosophy',t:'Meditations',a:'Marcus Aurelius',y:'c. 170–180 AD',
+ ov:'The private notebook of a Roman emperor, written to himself as he practised Stoic philosophy during war and plague.',
+ key:['Focus on what you control, which is your own judgements and actions.','Everything is temporary, so keep perspective.','Act for the common good.','Treat obstacles as material for building character.'],
+ pros:['Short, practical and easy to dip into.','Moving precisely because it was never meant for publication.'],
+ cons:['Repetitive and unstructured.','Rests on a Stoic worldview of fate and providence that many readers will not share.']},
+{c:'History',t:'History of the Peloponnesian War',a:'Thucydides',y:'c. 400 BC',
+ ov:'An account of the war between Athens and Sparta from 431 to 404 BC, told with a cool eye for power, fear and politics.',
+ key:['Argues the deep cause was fear of Athens’s growing power.','The Melian Dialogue shows blunt power politics.','The plague in Athens and Pericles’s funeral speech.','Believes human nature means similar events will recur.'],
+ pros:['Sober, evidence-minded analysis with no gods in the explanation.','A classic for understanding politics and rivalry between powers.'],
+ cons:['Unfinished, ending in 411 BC.','The speeches are his reconstructions, and the view is Athens-centred.']},
+{c:'Science',t:'Relativity: The Special and General Theory',a:'Albert Einstein',y:'1916',q:'Einstein relativity',
+ ov:'Einstein’s own explanation of relativity for general readers, covering how space, time and gravity fit together.',
+ key:['The speed of light is the same for all observers.','Time and distance depend on how you are moving.','Mass and energy are linked.','Gravity is the curvature of space and time.'],
+ pros:['Written by the physicist himself, for non-specialists.','Short and built around clear thought experiments.'],
+ cons:['Still needs patience, and some sections use maths.','Predates the later experimental confirmations.']},
+{c:'Politics',t:'On Liberty',a:'John Stuart Mill',y:'1859',
+ ov:'A short, clear defence of individual freedom against both the state and social pressure.',
+ key:['The harm principle: power over a person is justified only to prevent harm to others.','Free speech matters even for opinions that are wrong or unpopular.','Individuality is valuable, and conformity is a danger.','Beware the tyranny of the majority.'],
+ pros:['Short, readable and still central to free-speech debates.','Gives a simple test that is easy to argue with and apply.'],
+ cons:['“Harm” is hard to define in practice.','Has Victorian blind spots, including paternalism towards colonised peoples.']},
+{c:'History',t:'The Histories',a:'Herodotus',y:'c. 430 BC',q:'Herodotus histories',
+ ov:'The first great attempt to investigate the past, following the Greek–Persian wars and wandering into the customs of the known world.',
+ key:['Traces the causes of the conflict between Greeks and Persians.','Describes Egypt, Persia, Scythia and others with a travel writer’s curiosity.','Presents “inquiry” (historia) as a method.'],
+ pros:['Entertaining, wide-ranging and full of stories.','Preserves information we would not otherwise have.'],
+ cons:['Mixes fact with legend, and critics doubted some claims even in antiquity.','Digressions can feel endless.']},
+{c:'Maths',t:'Flatland',a:'Edwin Abbott',y:'1884',
+ ov:'A short story about a Square living in a two-dimensional world who is visited by a Sphere, making higher dimensions easy to grasp.',
+ key:['Uses analogy to understand dimensions we cannot see.','Shows how a lower-dimensional being would misread a higher one.','Doubles as a satire of Victorian class and social rigidity.'],
+ pros:['Short, witty and makes abstract ideas intuitive.','Quick to read in an evening.'],
+ cons:['Its treatment of women is dated.','The second half is thinner than the first.']},
+{c:'Strategy',t:'The Art of War',a:'Sun Tzu',y:'c. 5th century BC',q:'Sun Tzu art of war',
+ ov:'A compact manual of strategy that stresses planning, intelligence and winning without needless fighting.',
+ key:['The best victory is won without battle.','Know yourself and know your enemy.','Preparation, speed and deception decide outcomes.','Adapt to circumstances rather than follow a fixed formula.'],
+ pros:['Very short and aphoristic, so easy to revisit.','Its ideas travel well beyond warfare.'],
+ cons:['Vague, and often applied glibly to business.','Authorship and date are uncertain, and it describes a very different era of war.']},
+{c:'Nature',t:'The Voyage of the Beagle',a:'Charles Darwin',y:'1839',
+ ov:'Darwin’s journal of five years at sea, full of the observations that later shaped his ideas about evolution.',
+ key:['Records geology, giant fossil mammals and coral reefs.','Describes wildlife on the Galápagos and in South America.','Shows how detailed observation led to big questions.'],
+ pros:['Vivid, accessible travel writing.','A window into how a great scientist worked.'],
+ cons:['Long, and it does not lay out the theory of evolution directly.','Contains some attitudes of its time.']},
+{c:'Politics',t:'Leviathan',a:'Thomas Hobbes',y:'1651',
+ ov:'Written during the English Civil War, Hobbes argues that people need a strong authority to escape chaos.',
+ key:['Without government, life would be a war of all against all: “nasty, brutish and short”.','People give up some freedoms to a sovereign in return for security.','Political authority rests on an agreement, the social contract.'],
+ pros:['One of the first full social-contract theories.','Clear, forceful argument.'],
+ cons:['Defends very strong, near-absolute sovereign power.','Pessimistic view of human nature, with long religious sections.']},
+{c:'Psychology',t:'The Principles of Psychology',a:'William James',y:'1890',
+ ov:'A landmark textbook that helped found American psychology, with famous chapters on habit, attention and the stream of thought.',
+ key:['Consciousness is a continuous stream rather than separate pieces.','Habits are built by repetition, and shape our lives.','Attention selects what we experience.','Emotion involves bodily reactions, not just thoughts.'],
+ pros:['Vivid and readable for a scientific textbook.','Ideas on habit and attention are still widely cited.'],
+ cons:['Very long, with much outdated physiology.','Pre-dates modern experimental methods, and some theories were superseded.']},
+{c:'Politics',t:'The Social Contract',a:'Jean-Jacques Rousseau',y:'1762',
+ ov:'Rousseau asks what makes political authority legitimate, and answers that it comes from the collective agreement of the people.',
+ key:['Legitimate government rests on the people’s consent.','The “general will” is the common good, not just majority opinion.','Citizens are free when they obey laws they have made themselves.'],
+ pros:['Hugely influential on democratic thought and revolutions.','Short and punchy.'],
+ cons:['The “general will” is vague and open to abuse.','Some passages are troubling, such as being “forced to be free”.']},
+{c:'Philosophy',t:'Nicomachean Ethics',a:'Aristotle',y:'c. 340 BC',q:'Aristotle Nicomachean ethics',
+ ov:'Aristotle asks how to live well, arguing that the goal is flourishing and that it comes from building good character.',
+ key:['The aim of life is eudaimonia, or flourishing.','Virtue is a habit, usually a balance between two extremes.','Practical wisdom is needed to apply virtues in real situations.','Friendship is central to a good life.'],
+ pros:['Practical, and the root of modern virtue ethics.','Treats ethics as a skill you can practise.'],
+ cons:['Dense, lecture-notes style.','Reflects ancient assumptions about class and gender, and the “mean” can be vague.']},
+{c:'Politics',t:'The Prince',a:'Niccolò Machiavelli',y:'1532',
+ ov:'A short guide for rulers on gaining and keeping power, famous for putting results ahead of idealised morality.',
+ key:['Rulers must deal with the world as it is, not as it should be.','Being feared can be safer than being loved, but avoid being hated.','Success depends on both skill (virtù) and luck (fortuna).','Rely on your own forces rather than mercenaries.'],
+ pros:['Short, direct and foundational for political realism.','Still a useful lens for understanding power.'],
+ cons:['Cold on ethics, and scholars still argue whether it is meant seriously or ironically.','Examples come from Renaissance Italy.']},
+{c:'Politics',t:'The Communist Manifesto',a:'Karl Marx & Friedrich Engels',y:'1848',q:'Communist Manifesto',
+ ov:'A short, influential pamphlet that interprets history as a struggle between social classes and calls for workers to organise.',
+ key:['History is described as a history of class struggle.','Capitalism is portrayed as hugely productive but unstable.','The working class is expected to overthrow the existing order.','Calls for collective ownership of the means of production.'],
+ pros:['Short, vivid and historically enormous in impact.','Sharp description of how capitalism transforms societies.'],
+ cons:['Many of its predictions did not come true.','Its economics are heavily contested, and later regimes acted in its name with severe consequences.']}
 ];
 const GUT='https://www.gutenberg.org/ebooks/search/?query=';
-let bookCat='All';
 function bookUrl(b){return GUT+encodeURIComponent(b.q?b.q:b.t+' '+b.a.split(' ').pop());}
+function mk(tag,txt,cls){const e=document.createElement(tag); if(cls) e.className=cls; if(txt!==undefined) e.textContent=txt; return e;}
+function bulletBlock(title,items,cls){
+  const d=mk('div',undefined,cls); d.appendChild(mk('h4',title));
+  const u=document.createElement('ul'); items.forEach(i=>u.appendChild(mk('li',i))); d.appendChild(u); return d;
+}
+function bookDetail(b){
+  const w=document.createElement('div');
+  w.append(mk('p',b.ov,'ov'),bulletBlock('Key points',b.key),bulletBlock('Pros',b.pros,'pros'),bulletBlock('Cons',b.cons,'cons'));
+  const a=mk('a','Read free on Gutenberg ↗','read'); a.href=bookUrl(b); a.target='_blank'; a.rel='noopener'; w.appendChild(a);
+  return w;
+}
+function dayIndex(){const n=new Date(); return Math.floor(Date.UTC(n.getFullYear(),n.getMonth(),n.getDate())/864e5);}
 function buildBooks(){
-  const cats=['All',...new Set(BOOKS.map(b=>b.c))];
-  const wrap=$('bookCats'); wrap.innerHTML='';
-  cats.forEach(c=>{
-    const b=document.createElement('button'); b.className='tchip'+(c===bookCat?' on':''); b.textContent=c;
-    b.onclick=()=>{bookCat=c;buildBooks();}; wrap.appendChild(b);
-  });
+  const idx=dayIndex()%BOOKS.length, today=BOOKS[idx];
+  const d=$('bookDaily'); d.innerHTML='';
+  const card=mk('div',undefined,'daily bk');
+  card.append(mk('div','Book of the day · '+today.c,'lbl'),mk('h3',today.t),mk('div',today.a+' · '+today.y,'book-meta'),bookDetail(today));
+  d.appendChild(card);
   const list=$('bookList'); list.innerHTML='';
-  BOOKS.filter(b=>bookCat==='All'||b.c===bookCat).forEach(b=>{
-    const d=document.createElement('div'); d.className='saved-item';
-    const tag=document.createElement('div'); tag.className='book-tag'; tag.textContent=b.c;
-    const h=document.createElement('h3'); h.textContent=b.t;
-    const m=document.createElement('div'); m.className='book-meta'; m.textContent=b.a+' · '+b.y;
-    const p=document.createElement('p'); p.textContent=b.d;
-    const a=document.createElement('a'); a.href=bookUrl(b); a.target='_blank'; a.rel='noopener'; a.textContent='Find free on Gutenberg ↗';
-    d.append(tag,h,m,p,a); list.appendChild(d);
+  BOOKS.forEach((b,i)=>{
+    const item=mk('div',undefined,'bl bk');
+    const btn=document.createElement('button');
+    const left=document.createElement('span');
+    left.append(document.createTextNode(b.t+(i===idx?'  • today':'')),mk('span',b.a+' · '+b.y+' · '+b.c,'sm'));
+    btn.append(left,mk('span','›','chev'));
+    const det=mk('div',undefined,'det'); let filled=false;
+    btn.onclick=()=>{ if(!filled){det.appendChild(bookDetail(b));filled=true;} item.classList.toggle('open'); };
+    item.append(btn,det); list.appendChild(item);
   });
 }
 function bookSearch(){
   const v=$('bookSearch').value.trim(); if(!v) return;
   window.open(GUT+encodeURIComponent(v),'_blank','noopener');
 }
-$('booksBtn').onclick=()=>{buildBooks();$('booksOv').classList.add('show');};
-$('booksClose').onclick=()=>$('booksOv').classList.remove('show');
+$('booksBtn').onclick=()=>toggleOverlay('booksOv',buildBooks);
+$('booksClose').onclick=()=>closeOverlays();
 $('bookSearchGo').onclick=bookSearch;
 $('bookSearch').addEventListener('keydown',e=>{if(e.key==='Enter')bookSearch();});
 
