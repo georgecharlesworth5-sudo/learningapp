@@ -1217,6 +1217,8 @@ const C_RP=cRankMap(COUNTRIES,'p',1), C_RA=cRankMap(COUNTRIES,'ar',1), C_RD=cRan
 const C_RREG={p:{},ar:{}};
 ['Africa','Americas','Asia','Europe','Oceania'].forEach(r=>{const l=COUNTRIES.filter(c=>c.r===r);Object.assign(C_RREG.p,cRankMap(l,'p',1));Object.assign(C_RREG.ar,cRankMap(l,'ar',1));});
 const C_N=COUNTRIES.length;
+const C_TP=COUNTRIES.reduce((s,c)=>s+c.p,0), C_TA=COUNTRIES.reduce((s,c)=>s+c.ar,0);
+function fmtPct(x){const v=x*100; return v<0.01?'<0.01%':(v<1?v.toFixed(2):v.toFixed(1))+'%';}
 function ord(n){const v=n%100;return n+(['th','st','nd','rd'][(v-20)%10]||['th','st','nd','rd'][v]||'th');}
 function fmtPop(n){
   if(n>=1e9) return (n/1e9).toFixed(2)+' billion';
@@ -1293,10 +1295,10 @@ function countryCard(c,idx,total){
   grid.append(
     cTile('Capital',cap,capNote.length<40?capNote:''),
     cTile('Largest city',c.l||cap,c.l?'':'(the capital)'),
-    cTile('Population',fmtPop(c.p),ord(C_RP[c.i])+' of '+C_N),
-    cTile('Area',fmtArea(c.ar)+' km²',ord(C_RA[c.i])+' of '+C_N),
+    cTile('Population',fmtPop(c.p),fmtPct(c.p/C_TP)+' of world · '+ord(C_RP[c.i])+' of '+C_N),
+    cTile('Area',fmtArea(c.ar)+' km²',fmtPct(c.ar/C_TA)+' of world · '+ord(C_RA[c.i])+' of '+C_N),
     cTile('Hemisphere',h.ns,h.ew),
-    cTile('Location',coordTxt(c),'approx. centre')
+    cTile('Currency',c.cu.split('; ')[0],c.cu.indexOf('; ')>0?'+ '+(c.cu.split('; ').length-1)+' more in use':'')
   );
   if(c.c.length>=40){const n=mk('p',c.c,'cnote'); el.append(grid,n);} else el.append(grid);
   const fs=features(c);
@@ -1319,7 +1321,7 @@ function countryCard(c,idx,total){
   const wiki=mk('a','Read on Wikipedia ↗','src'); wiki.target='_blank'; wiki.rel='noopener'; wiki.href='https://en.wikipedia.org/wiki/'+encodeURIComponent((c.w||c.n).replace(/ /g,'_'));
   const lk=mk('div',undefined,'clinks'); lk.append(mb,wiki); el.append(lk,more);
   const wiki2=wiki.cloneNode(true);
-  more.append(mk('p','Figures are approximate 2025 estimates. The list is the 193 UN member states plus the Vatican City and Palestine, which are UN observer states.','cnote cfoot'));
+  more.append(mk('p','Figures are approximate 2025 estimates, and shares are of the total across these countries. The list is the 193 UN member states plus the Vatican City and Palestine, which are UN observer states.','cnote cfoot'));
   const cb=mk('button','Back to the card','btn'); cb.onclick=()=>more.classList.remove('open'); more.append(cb);
   return el;
 }
