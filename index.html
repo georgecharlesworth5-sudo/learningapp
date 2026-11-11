@@ -102,7 +102,7 @@ h2{font-size:26px;line-height:1.15;margin-bottom:10px}
 .crow2 select{padding:9px 8px;border-radius:12px;border:1px solid #2b3244;background:var(--panel);color:var(--text);font-size:13px;max-width:130px}
 .ccount{font-size:12px;color:var(--muted);margin-top:6px}
 #cFeed{flex:1;min-height:0;overflow-y:auto;scroll-snap-type:y mandatory;overscroll-behavior:contain}
-.ccard{height:100%;scroll-snap-align:start;scroll-snap-stop:always;overflow-y:auto;padding:6px 18px 54px;position:relative;border-top:1px solid #1d2232}
+.ccard{height:100%;scroll-snap-align:start;scroll-snap-stop:always;overflow:hidden;padding:6px 18px 12px;position:relative;border-top:1px solid #1d2232}
 .chead{display:flex;justify-content:space-between;align-items:flex-start;margin:8px 0 10px}
 .cflag{width:96px;height:64px;border-radius:8px;overflow:hidden;background:var(--panel);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 10px rgba(0,0,0,.4)}
 .cflag img{width:100%;height:100%;object-fit:cover}
@@ -123,8 +123,14 @@ h2{font-size:26px;line-height:1.15;margin-bottom:10px}
 .cnote{font-size:12px;color:var(--muted);line-height:1.45;margin:0 0 10px}
 .cfoot{margin-top:16px}
 .cmbtn{background:none;border:0;color:var(--accent);font-size:14px;font-weight:600;cursor:pointer;padding:6px 0;display:block}
-.cmore{display:none;background:var(--panel);border-radius:12px;padding:4px 12px;margin:6px 0}
+.cmore{display:none;position:absolute;inset:0;z-index:5;background:#0f121a;overflow-y:auto;padding:12px 18px 30px;overscroll-behavior:contain}
 .cmore.open{display:block}
+.cmore h3{font-size:20px;margin-bottom:8px}
+.cmore .btn{width:100%;margin-top:14px}
+.cblurb{display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden}
+.clinks{display:flex;gap:18px;align-items:center}
+.clinks .src{margin:0}
+@media(max-height:780px){.cname{font-size:26px}.cpos{margin-bottom:8px}.cgrid{gap:6px;margin-bottom:8px}.ct{padding:7px 10px}.cv{font-size:15px}.cflag{width:72px;height:48px}.cemo{font-size:32px}.cheart{width:38px;height:38px}.chead{margin:4px 0 6px}.ctags{margin-bottom:8px}.cblurb{font-size:14px;-webkit-line-clamp:4}}
 .cr{display:flex;justify-content:space-between;gap:14px;padding:9px 0;border-bottom:1px solid #232a3c;font-size:14px;line-height:1.35}
 .cr:last-child{border-bottom:0}
 .cr span{color:var(--muted);flex:none}
@@ -1297,7 +1303,7 @@ function countryCard(c,idx,total){
   if(fs.length){const w=mk('div',undefined,'ctags'); fs.forEach(([e,t])=>w.append(mk('span',e+' '+t,'ctag'))); el.append(w);}
   const bl=mk('p','','cblurb'); bl.dataset.state='idle'; el.append(bl);
   const more=mk('div',undefined,'cmore');
-  more.append(
+  more.append(mk('h3',c.f+' '+c.n+' · more facts'),
     cRow('Languages',c.lg.join(', ')),
     cRow('Currency',c.cu),
     cRow('Neighbours',c.b.length?c.b.map(x=>(C_BYI[x]&&C_BYI[x].n)||C_XB[x]||x).join(', '):(c.ls?'None':'None (surrounded by sea)')),
@@ -1309,10 +1315,12 @@ function countryCard(c,idx,total){
     cRow('People are called',c.dm),
     cRow('In '+c.r,ord(C_RREG.p[c.i])+' by population, '+ord(C_RREG.ar[c.i])+' by area')
   );
-  const mb=mk('button','Show more facts ▾','cmbtn'); mb.onclick=()=>{const o=more.classList.toggle('open'); mb.textContent=o?'Show fewer facts ▴':'Show more facts ▾';};
+  const mb=mk('button','More facts ▸','cmbtn'); mb.onclick=()=>{more.classList.add('open');more.scrollTop=0;};
   const wiki=mk('a','Read on Wikipedia ↗','src'); wiki.target='_blank'; wiki.rel='noopener'; wiki.href='https://en.wikipedia.org/wiki/'+encodeURIComponent((c.w||c.n).replace(/ /g,'_'));
-  el.append(mb,more,wiki);
-  el.append(mk('p','Figures are approximate 2025 estimates. The list is the 193 UN member states plus the Vatican City and Palestine, which are UN observer states.','cnote cfoot'));
+  const lk=mk('div',undefined,'clinks'); lk.append(mb,wiki); el.append(lk,more);
+  const wiki2=wiki.cloneNode(true);
+  more.append(mk('p','Figures are approximate 2025 estimates. The list is the 193 UN member states plus the Vatican City and Palestine, which are UN observer states.','cnote cfoot'));
+  const cb=mk('button','Back to the card','btn'); cb.onclick=()=>more.classList.remove('open'); more.append(cb);
   return el;
 }
 function cLoadCard(el){
