@@ -1295,8 +1295,8 @@ function countryCard(c,idx,total){
   grid.append(
     cTile('Capital',cap,capNote.length<40?capNote:''),
     cTile('Largest city',c.l||cap,c.l?'':'(the capital)'),
-    cTile('Population',fmtPop(c.p),fmtPct(c.p/C_TP)+' of world · '+ord(C_RP[c.i])+' of '+C_N),
-    cTile('Area',fmtArea(c.ar)+' km²',fmtPct(c.ar/C_TA)+' of world · '+ord(C_RA[c.i])+' of '+C_N),
+    cTile('Population',fmtPop(c.p),ord(C_RP[c.i])+' of '+C_N),
+    cTile('Area',fmtArea(c.ar)+' km²',ord(C_RA[c.i])+' of '+C_N),
     cTile('Hemisphere',h.ns,h.ew),
     cTile('Currency',c.cu.split('; ')[0],c.cu.indexOf('; ')>0?'+ '+(c.cu.split('; ').length-1)+' more in use':'')
   );
@@ -1321,7 +1321,7 @@ function countryCard(c,idx,total){
   const wiki=mk('a','Read on Wikipedia ↗','src'); wiki.target='_blank'; wiki.rel='noopener'; wiki.href='https://en.wikipedia.org/wiki/'+encodeURIComponent((c.w||c.n).replace(/ /g,'_'));
   const lk=mk('div',undefined,'clinks'); lk.append(mb,wiki); el.append(lk,more);
   const wiki2=wiki.cloneNode(true);
-  more.append(mk('p','Figures are approximate 2025 estimates, and shares are of the total across these countries. The list is the 193 UN member states plus the Vatican City and Palestine, which are UN observer states.','cnote cfoot'));
+  more.append(mk('p','Figures are approximate 2025 estimates. The list is the 193 UN member states plus the Vatican City and Palestine, which are UN observer states.','cnote cfoot'));
   const cb=mk('button','Back to the card','btn'); cb.onclick=()=>more.classList.remove('open'); more.append(cb);
   return el;
 }
